@@ -138,15 +138,15 @@ class ApplicationModule(private val application: Application) {
             readTimeout(10, TimeUnit.SECONDS)
             writeTimeout(10, TimeUnit.SECONDS)
             pingInterval(5, TimeUnit.SECONDS)
-            certificatePinner(
-                CertificatePinner.Builder().apply {
-                    BuildConfig.PINNED_URLS.split(",").forEach { pinnedUrl ->
-                        BuildConfig.PINNED_ROOT_CERTIFICATE_HASHES.split(",").forEach { hash ->
-                            add(pinnedUrl, hash)
-                        }
-                    }
-                }.build()
-            )
+//            certificatePinner(
+//                CertificatePinner.Builder().apply {
+//                    BuildConfig.PINNED_URLS.split(",").forEach { pinnedUrl ->
+//                        BuildConfig.PINNED_ROOT_CERTIFICATE_HASHES.split(",").forEach { hash ->
+//                            add(pinnedUrl, hash)
+//                        }
+//                    }
+//                }.build()
+//            )
         }.build()
 
 
