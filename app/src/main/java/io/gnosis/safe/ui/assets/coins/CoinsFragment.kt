@@ -11,11 +11,13 @@ import io.gnosis.safe.R
 import io.gnosis.safe.ScreenId
 import io.gnosis.safe.databinding.FragmentCoinsBinding
 import io.gnosis.safe.di.components.ViewComponent
-import io.gnosis.safe.ui.base.fragment.BaseViewBindingFragment
+import io.gnosis.safe.helpers.Offline
 import io.gnosis.safe.ui.base.BaseStateViewModel
+import io.gnosis.safe.ui.base.BaseStateViewModel.ViewAction.*
+import io.gnosis.safe.ui.base.fragment.BaseViewBindingFragment
+import io.gnosis.safe.utils.getErrorResForException
 import pm.gnosis.svalinn.common.utils.snackbar
 import pm.gnosis.svalinn.common.utils.visible
-import timber.log.Timber
 import javax.inject.Inject
 
 class CoinsFragment : BaseViewBindingFragment<FragmentCoinsBinding>() {
@@ -49,8 +51,30 @@ class CoinsFragment : BaseViewBindingFragment<FragmentCoinsBinding>() {
                     binding.refresh.isRefreshing = state.refreshing
                     state.viewAction?.let { action ->
                         when (action) {
-                            is BaseStateViewModel.ViewAction.ShowError -> handleError(action.error)
-                            is UpdateBalances -> adapter.setItems(action.newBalances)
+                            is UpdateActiveSafe -> {
+                                adapter.setItems(listOf())
+                            }
+                            is UpdateBalances -> {
+                                binding.contentNoData.root.visibility = View.GONE
+                                adapter.setItems(action.newBalances)
+                            }
+                            is ShowError -> {
+                                hideLoading()
+                                if (adapter.itemCount == 0) {
+                                    binding.contentNoData.root.visible(true)
+                                }
+                                when (action.error) {
+                                    is Offline -> {
+                                        snackbar(requireView(), R.string.error_no_internet)
+                                    }
+                                    else -> {
+                                        snackbar(requireView(), action.error.getErrorResForException())
+                                    }
+                                }
+                            }
+                            else -> {
+
+                            }
                         }
                     }
                 }
@@ -59,9 +83,9 @@ class CoinsFragment : BaseViewBindingFragment<FragmentCoinsBinding>() {
         viewModel.load()
     }
 
-    private fun handleError(throwable: Throwable) {
-        snackbar(requireView(), R.string.error_loading_balances)
-        Timber.e(throwable)
+    private fun hideLoading() {
+        binding.progress.visible(false)
+        binding.refresh.isRefreshing = false
     }
 
     companion object {

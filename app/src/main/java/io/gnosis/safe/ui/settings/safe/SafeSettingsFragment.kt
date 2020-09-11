@@ -14,24 +14,27 @@ import io.gnosis.safe.R
 import io.gnosis.safe.ScreenId
 import io.gnosis.safe.databinding.FragmentSettingsSafeBinding
 import io.gnosis.safe.di.components.ViewComponent
-import io.gnosis.safe.ui.base.BaseStateViewModel
+import io.gnosis.safe.helpers.Offline
+import io.gnosis.safe.ui.base.BaseStateViewModel.ViewAction.Loading
+import io.gnosis.safe.ui.base.BaseStateViewModel.ViewAction.ShowError
 import io.gnosis.safe.ui.base.fragment.BaseViewBindingFragment
 import io.gnosis.safe.ui.settings.SettingsFragmentDirections
 import io.gnosis.safe.ui.settings.view.AddressItem
 import io.gnosis.safe.utils.CustomAlertDialogBuilder
+import io.gnosis.safe.utils.getErrorResForException
 import pm.gnosis.model.Solidity
 import pm.gnosis.svalinn.common.utils.snackbar
 import pm.gnosis.svalinn.common.utils.visible
-import timber.log.Timber
 import javax.inject.Inject
 
 class SafeSettingsFragment : BaseViewBindingFragment<FragmentSettingsSafeBinding>() {
 
     override fun screenId() = ScreenId.SETTINGS_SAFE
 
+    private var didLoadOnce = false
+
     @Inject
     lateinit var viewModel: SafeSettingsViewModel
-
 
     override fun inject(component: ViewComponent) {
         component.inject(this)
@@ -54,10 +57,31 @@ class SafeSettingsFragment : BaseViewBindingFragment<FragmentSettingsSafeBinding
         }
         viewModel.state.observe(viewLifecycleOwner, Observer {
             when (val viewAction = it.viewAction) {
-                is BaseStateViewModel.ViewAction.Loading -> updateUi(viewAction.isLoading, it.safe, it.safeInfo, it.ensName)
-                is BaseStateViewModel.ViewAction.ShowError -> showError(viewAction.error)
+                is Loading -> {
+                    didLoadOnce = if (didLoadOnce) didLoadOnce else !viewAction.isLoading
+                    updateUi(viewAction.isLoading, it.safe, it.safeInfo, it.ensName)
+                }
+                is ShowError -> {
+                    if (!didLoadOnce) {
+                        showContentNoData()
+                    }
+                    hideLoading()
+                    when (viewAction.error) {
+                        is Offline -> {
+                            snackbar(requireView(), R.string.error_no_internet)
+                        }
+                        else -> {
+                            snackbar(requireView(), viewAction.error.getErrorResForException())
+                        }
+                    }
+                }
             }
         })
+    }
+
+    private fun showContentNoData() {
+        binding.contentNoData.root.visible(true)
+        binding.mainContainer.visibility = View.GONE
     }
 
     private fun updateUi(isLoading: Boolean, safe: Safe?, safeInfo: SafeInfo?, ensNameValue: String?) {
@@ -85,7 +109,7 @@ class SafeSettingsFragment : BaseViewBindingFragment<FragmentSettingsSafeBinding
             ownersContainer.removeAllViews()
             safeInfo?.owners?.forEach { owner -> ownersContainer.addView(ownerView(owner)) }
             masterCopy.address = safeInfo?.masterCopy
-            ensName.name = ensNameValue?.takeUnless { it.isBlank() } ?: getString(R.string.safe_settings_not_set)
+            ensName.name = ensNameValue?.takeUnless { it.isBlank() } ?: getString(R.string.safe_settings_not_set_reverse_record)
         }
     }
 
@@ -97,14 +121,11 @@ class SafeSettingsFragment : BaseViewBindingFragment<FragmentSettingsSafeBinding
         }
     }
 
-    private fun showError(throwable: Throwable) {
+    private fun hideLoading() {
         with(binding) {
             refresh.isRefreshing = false
-            mainContainer.visible(false)
             progress.visible(false)
         }
-        snackbar(requireView(), throwable.message ?: getString(R.string.error_invalid_safe))
-        Timber.e(throwable)
     }
 
     private fun showRemoveDialog() {
