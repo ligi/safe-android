@@ -17,7 +17,7 @@ import io.gnosis.data.repositories.SafeRepository.Companion.METHOD_SWAP_OWNER
 import io.gnosis.data.repositories.SafeRepository.Companion.SAFE_MASTER_COPY_1_1_1
 import io.gnosis.safe.R
 import io.gnosis.safe.ui.transactions.details.view.ActionInfoItem
-import junit.framework.Assert.assertEquals
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import pm.gnosis.crypto.utils.asEthereumAddressChecksumString
 import pm.gnosis.model.Solidity
@@ -30,11 +30,14 @@ private const val anotherAddressString = "0x000000000000000000000000000000000000
 
 class TxUtilsKtTest {
 
+    private val balanceFormatter: BalanceFormatter = BalanceFormatter()
+    private val DS = balanceFormatter.decimalSeparator
+
     @Test
     fun `formattedAmount (Unknown txInfo) should return 0 ETH`() {
 
         val txInfo = TransactionInfo.Unknown
-        val result = txInfo.formattedAmount()
+        val result = txInfo.formattedAmount(balanceFormatter)
 
         assertEquals("0 ETH", result)
     }
@@ -47,7 +50,7 @@ class TxUtilsKtTest {
             dataSize = 0,
             value = BigInteger.ZERO
         )
-        val result = txInfo.formattedAmount()
+        val result = txInfo.formattedAmount(balanceFormatter)
 
         assertEquals("0 ETH", result)
     }
@@ -61,7 +64,7 @@ class TxUtilsKtTest {
             direction = TransactionDirection.OUTGOING,
             transferInfo = buildTransferInfo(value = "1000000000000000000".toBigInteger())
         )
-        val result = txInfo.formattedAmount()
+        val result = txInfo.formattedAmount(balanceFormatter)
 
         assertEquals("-1 ETH", result)
     }
@@ -75,7 +78,7 @@ class TxUtilsKtTest {
             direction = TransactionDirection.OUTGOING,
             transferInfo = buildTransferInfo(value = BigInteger.ZERO)
         )
-        val result = txInfo.formattedAmount()
+        val result = txInfo.formattedAmount(balanceFormatter)
 
         assertEquals("0 ETH", result)
     }
@@ -89,9 +92,9 @@ class TxUtilsKtTest {
             direction = TransactionDirection.INCOMING,
             transferInfo = buildErc20TransferInfo(value = BigInteger.ZERO)
         )
-        val result = txInfo.formattedAmount()
+        val result = txInfo.formattedAmount(balanceFormatter)
 
-        assertEquals("+0.1 WETH", result)
+        assertEquals("+0${DS}1 WETH", result)
     }
 
     @Test

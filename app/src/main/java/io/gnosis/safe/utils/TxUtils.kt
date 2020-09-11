@@ -11,10 +11,10 @@ import io.gnosis.safe.ui.transactions.getVersionForAddress
 import pm.gnosis.utils.asEthereumAddress
 import java.math.BigInteger
 
-fun TransactionInfo.formattedAmount(): String =
+fun TransactionInfo.formattedAmount(balanceFormatter: BalanceFormatter): String =
     when (val txInfo = this) {
         is TransactionInfo.Custom -> {
-            txInfo.value.formatAmount(true, 18, "ETH")
+            balanceFormatter.formatAmount(txInfo.value, true, 18, "ETH")
         }
         is TransactionInfo.Transfer -> {
             val incoming = txInfo.direction == TransactionDirection.INCOMING
@@ -49,10 +49,10 @@ fun TransactionInfo.formattedAmount(): String =
                 }
 
             }
-            value.formatAmount(incoming, decimals, symbol)
+            balanceFormatter.formatAmount(value, incoming, decimals, symbol)
         }
         is TransactionInfo.SettingsChange -> "0 ETH"
-        TransactionInfo.Creation -> "0 ETH"
+        is TransactionInfo.Creation -> "0 ETH"
         TransactionInfo.Unknown -> "0 ETH"
     }
 
@@ -69,7 +69,7 @@ fun TransactionInfo.logoUri(): String? =
                 "local::ethereum"
             }
         }
-        is TransactionInfo.Custom, is TransactionInfo.SettingsChange, TransactionInfo.Creation, TransactionInfo.Unknown -> "local::ethereum"
+        is TransactionInfo.Custom, is TransactionInfo.SettingsChange, is TransactionInfo.Creation, TransactionInfo.Unknown -> "local::ethereum"
     }
 
 fun TransactionInfo.SettingsChange.txActionInfoItems(): List<ActionInfoItem> {

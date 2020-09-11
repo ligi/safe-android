@@ -10,17 +10,21 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import io.gnosis.data.models.Safe
+import io.gnosis.data.repositories.TokenRepository
 import io.gnosis.safe.R
 import io.gnosis.safe.notifications.models.PushNotification
 import io.gnosis.safe.ui.StartActivity
+import io.gnosis.safe.utils.BalanceFormatter
+import io.gnosis.safe.utils.convertAmount
 import io.gnosis.safe.utils.formatForTxList
 import pm.gnosis.svalinn.common.PreferencesManager
 import pm.gnosis.svalinn.common.utils.edit
 
 class NotificationManager(
     private val context: Context,
-    private val preferencesManager: PreferencesManager
-    ) {
+    private val preferencesManager: PreferencesManager,
+    private val balanceFormatter: BalanceFormatter
+) {
 
     private val notificationManager = NotificationManagerCompat.from(context)
 
@@ -91,7 +95,8 @@ class NotificationManager(
             }
             is PushNotification.IncomingEther -> {
                 title = context.getString(R.string.push_title_received_eth)
-                text = context.getString(R.string.push_text_received_eth, safeName)
+                val value = balanceFormatter.shortAmount(pushNotification.value.convertAmount(TokenRepository.ETH_TOKEN_INFO.decimals))
+                text = context.getString(R.string.push_text_received_eth, safeName, value)
                 intent = txListIntent(safe)
             }
         }
@@ -141,6 +146,16 @@ class NotificationManager(
     fun hideAll() {
         latestNotificationId = -1
         notificationManager.cancelAll()
+    }
+
+    fun notificationsEnabled(): Boolean {
+        var enabled = notificationManager.areNotificationsEnabled()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = notificationManager.getNotificationChannel(CHANNEL_ID)
+            enabled = enabled && channel?.importance != NotificationManager.IMPORTANCE_NONE
+
+        }
+        return enabled
     }
 
     private fun txDetailsIntent(safe: Safe, safeTxHash: String): PendingIntent {

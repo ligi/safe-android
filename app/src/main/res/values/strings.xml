@@ -42,6 +42,7 @@
 
     <string name="error_loading_balances">Unable to load balances</string>
     <string name="error_no_internet">No Internet connection</string>
+    <string name="error_timeout">Connection timeout</string>
     <string name="error_cannot_load_tx_details">Cannot load transaction details</string>
     <string name="error_data_cannot_be_loaded">Data cannot be loaded</string>
     <string name="error_try_again">An error occurred. Please try again!</string>
@@ -54,6 +55,11 @@
     <string name="get_started">Get started</string>
     <string name="splash_text">The most trusted platform to store digital assets on Ethereum</string>
 
+    <string name="collectibles_empty">Collectibles will appear here</string>
+    <string name="collectibles_unknown">Unknown</string>
+    <string name="collectibles_details">Collectible details</string>
+    <string name="collectibles_asset_contract">Asset Contract</string>
+    <string name="collectibles_view_on">View on %1$s</string>
 
     <string name="settings_tab_safe">SAFE SETTINGS</string>
     <string name="settings_tab_app">APP SETTINGS</string>
@@ -96,6 +102,8 @@
     <string name="tx_list_set_fallback_handler">Set fallback handler</string>
     <string name="tx_list_enable_module">Enable module</string>
     <string name="tx_list_disable_module">Disable module</string>
+    <string name="tx_list_creation">Safe created</string>
+
     <string name="tx_list_awaiting_confirmations">\u2022 Awaiting confirmations</string>
     <string name="tx_list_awaiting_execution">\u2022 Awaiting execution</string>
     <string name="tx_list_pending">\u2022 Pending</string>
@@ -106,12 +114,17 @@
     <string name="tx_list_safe_implementation_version_unknown">Unknown</string>
     <string name="tx_list_default_fallback_handler_unknown">Unknown</string>
     <string name="tx_list_default_fallback_handler">DefaultFallbackHandler</string>
+    <string name="tx_list_error_loading_data">Could not load more transactions</string>
 
     <string name="tx_details_title">Transaction details</string>
     <string name="tx_details_advanced">Advanced</string>
     <string name="tx_details_created">Created:</string>
     <string name="tx_details_executed">Executed:</string>
     <string name="tx_details_view_on_etherscan">View transaction on Etherscan</string>
+    <string name="tx_details_token_name_unknown">Unknown</string>
+    <string name="tx_details_creation_creator_address">Creator address</string>
+    <string name="tx_details_creation_implementation_used">Mastercopy used</string>
+    <string name="tx_details_creation_factory_used">Factory used</string>
 
     <string name="tx_details_advanced_nonce">Nonce:</string>
     <string name="tx_details_advanced_operation">Type of operation:</string>
@@ -123,6 +136,7 @@
     <string name="tx_details_enable_module">Enable module:</string>
     <string name="tx_details_remove_owner">Remove owner:</string>
     <string name="tx_details_set_fallback_handler">Set fallback handler:</string>
+    <string name="tx_details_asset_contract">Asset Contract</string>
 
     <string name="tx_status_type_transfer_incoming">Incoming Transfer</string>
     <string name="tx_status_type_transfer_outgoing">Outgoing Transfer</string>
@@ -157,13 +171,11 @@
     <string name="safe_settings_modules">Addresses of enabled modules</string>
 
     <string name="safe_settings_edit_name_title">Edit Safe name</string>
-    
-    <string name="tx_list_error_loading_data">Could not load more transactions</string>
 
     <string name="tx_confirmations_created">Created</string>
     <string name="tx_confirmations_confirmed">Confirmed</string>
     <string name="tx_confirmations_failed">Failed</string>
-    <string name="tx_confirmations_canceled">Canceled</string>
+    <string name="tx_confirmations_cancelled">Cancelled</string>
     <string name="tx_confirmations_execute_ready">Execute</string>
     <string name="tx_confirmations_execute_waiting">Execute (%1$d more confirmation needed)</string>
     <string name="tx_confirmations_executed">Executed</string>
@@ -180,7 +192,7 @@
     <string name="push_text_failed">%1$s: Transaction failed</string>
 
     <string name="push_title_received_eth">Incoming ETH</string>
-    <string name="push_text_received_eth">%1$s: ETH received</string>
+    <string name="push_text_received_eth">%1$s: %2$s ETH received</string>
 
     <string name="push_title_received_erc20">Incoming ERC20</string>
     <string name="push_text_received_erc20">%1$s: ERC20 tokens received</string>

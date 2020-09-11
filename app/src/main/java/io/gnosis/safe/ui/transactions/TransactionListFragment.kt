@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.paging.ExperimentalPagingApi
@@ -51,19 +52,25 @@ class TransactionListFragment : SafeOverviewBaseFragment<FragmentTransactionList
         super.onViewCreated(view, savedInstanceState)
 
         adapter.addLoadStateListener { loadState ->
-            binding.transactions.isVisible = loadState.refresh is LoadState.NotLoading
-            binding.progress.isVisible = loadState.refresh is LoadState.Loading
-        }
-        adapter.addDataRefreshListener { isEmpty ->
-            // FIXME: find better solution
-            // show empty state only if data was updated due to loaded transactions
-            // and not reseted  due to safe switch
-            if (viewModel.state.value?.viewAction is LoadTransactions && isEmpty)
-                showEmptyState()
-            else
-                showList()
+            if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
 
-            binding.refresh.isRefreshing = false
+                binding.progress.isVisible = loadState.refresh is LoadState.Loading && adapter.itemCount == 0
+                binding.refresh.isRefreshing = loadState.refresh is LoadState.Loading && adapter.itemCount != 0
+                val append = loadState.append
+                if (append is LoadState.Error) {
+                    handleError(append.error)
+                }
+                val prepend = loadState.prepend
+                if (prepend is LoadState.Error) {
+                    handleError(prepend.error)
+                }
+
+                if (viewModel.state.value?.viewAction is LoadTransactions && loadState.refresh is LoadState.NotLoading && adapter.itemCount == 0) {
+                    showEmptyState()
+                } else {
+                    showList()
+                }
+            }
         }
 
         with(binding.transactions) {
@@ -74,10 +81,10 @@ class TransactionListFragment : SafeOverviewBaseFragment<FragmentTransactionList
             layoutManager = LinearLayoutManager(requireContext())
             addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
         }
-        binding.refresh.setOnRefreshListener { viewModel.load(true) }
+        binding.refresh.setOnRefreshListener { viewModel.load() }
 
         viewModel.state.observe(viewLifecycleOwner, Observer { state ->
-            binding.progress.visible(state.isLoading)
+
             binding.contentNoData.root.visible(false)
 
             state.viewAction.let { viewAction ->
@@ -87,36 +94,47 @@ class TransactionListFragment : SafeOverviewBaseFragment<FragmentTransactionList
                     is ActiveSafeChanged -> {
                         handleActiveSafe(viewAction.activeSafe)
                         lifecycleScope.launch {
-                            // if safe changes we need to reset data for recycler to be at the top of the list
+                            // if safe changes we need to reset data for recycler
                             adapter.submitData(PagingData.empty())
                         }
                     }
                     is ShowError -> {
+                        binding.refresh.isRefreshing = false
                         binding.progress.visible(false)
-                        binding.contentNoData.root.visible(true)
-
-                        when (val errorException = viewAction.error) {
-                            is Offline -> {
-                                snackbar(requireView(), R.string.error_no_internet)
-                            }
-                            else -> {
-                                snackbar(requireView(), errorException.getErrorResForException())
-                            }
+                        if (adapter.itemCount == 0) {
+                            binding.contentNoData.root.visible(true)
                         }
+
+                        handleError(viewAction.error)
                     }
                     else -> {
                     }
                 }
             }
         })
+    }
+
+    override fun onResume() {
+        super.onResume()
+        binding.transactions.scrollToPosition(0)
         viewModel.load()
+    }
+
+    private fun handleError(error: Throwable) {
+        when (error) {
+            is Offline -> {
+                snackbar(requireView(), R.string.error_no_internet)
+            }
+            else -> {
+                snackbar(requireView(), error.getErrorResForException())
+            }
+        }
     }
 
     private fun loadNoSafeFragment() {
         with(binding) {
             transactions.visible(false)
-            imageEmpty.visible(false)
-            labelEmpty.visible(false)
+            emptyPlaceholder.visible(false)
             noSafe.apply {
                 childFragmentManager.beginTransaction()
                     .replace(noSafe.id, noSafeFragment)
@@ -134,16 +152,14 @@ class TransactionListFragment : SafeOverviewBaseFragment<FragmentTransactionList
     private fun showList() {
         with(binding) {
             transactions.visible(true)
-            imageEmpty.visible(false)
-            labelEmpty.visible(false)
+            emptyPlaceholder.visible(false)
         }
     }
 
     private fun showEmptyState() {
         with(binding) {
             transactions.visible(false)
-            imageEmpty.visible(true)
-            labelEmpty.visible(true)
+            emptyPlaceholder.visible(true)
         }
     }
 

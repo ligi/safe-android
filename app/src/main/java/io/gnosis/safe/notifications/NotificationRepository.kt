@@ -48,6 +48,12 @@ class NotificationRepository(
         }
     }
 
+    fun checkPermissions(): Boolean = notificationManager.notificationsEnabled()
+
+    fun clearNotifications() {
+        notificationManager.hideAll()
+    }
+
     suspend fun register() {
         if (deviceUuid == null) {
             kotlin.runCatching {
@@ -98,20 +104,20 @@ class NotificationRepository(
 
     suspend fun registerSafe(safeAddress: Solidity.Address) {
         kotlin.runCatching {
-                val token = getCloudMessagingToken()
-                token?.let {
-                    notificationService.register(
-                        FirebaseDevice(
-                            listOf(safeAddress.asEthereumAddressChecksumString()),
-                            token,
-                            BuildConfig.VERSION_CODE,
-                            BuildConfig.APPLICATION_ID,
-                            appVersion,
-                            "ANDROID",
-                            deviceUuid
-                        )
+            val token = getCloudMessagingToken()
+            token?.let {
+                notificationService.register(
+                    FirebaseDevice(
+                        listOf(safeAddress.asEthereumAddressChecksumString()),
+                        token,
+                        BuildConfig.VERSION_CODE,
+                        BuildConfig.APPLICATION_ID,
+                        appVersion,
+                        "ANDROID",
+                        deviceUuid
                     )
-                }
+                )
+            }
         }
             .onSuccess {
                 deviceUuid = it?.uuid
@@ -138,16 +144,17 @@ class NotificationRepository(
 
     private suspend fun getCloudMessagingToken() = suspendCoroutine<String?> { cont ->
         FirebaseInstanceId.getInstance().instanceId
-            .addOnCompleteListener(OnCompleteListener { task ->
+            .addOnCompleteListener { task ->
                 if (!task.isSuccessful) {
                     Timber.e(task.exception)
                     cont.resumeWithException(task.exception!!)
+                } else {
+                    // Get new Instance ID token
+                    val token = task.result?.token
+                    Timber.d("Firebase token: $token")
+                    cont.resume(token)
                 }
-                // Get new Instance ID token
-                val token = task.result?.token
-                Timber.d("Firebase token: $token")
-                cont.resume(token)
-            })
+            }
     }
 
     companion object {
