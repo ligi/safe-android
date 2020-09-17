@@ -9,7 +9,7 @@ if [[ $BUILDKITE_BRANCH  =~ ^v[0-9]+.* ]]; then
     export APP_VERSION_NAME=${BUILDKITE_BRANCH:1}
 else
   version="$(./gradlew -q pV | tail -1)"
-  export APP_VERSION_NAME="${version}.${APP_VERSION_CODE}"
+  export APP_VERSION_NAME="${version}-${APP_VERSION_CODE}"
 fi
 
 export APP_RELEASE_NOTES=$BUILDKITE_MESSAGE
