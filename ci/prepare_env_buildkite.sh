@@ -13,7 +13,7 @@ else
       RC_INDICATOR="rc"
   fi
   version="$(./gradlew -q pV | tail -1)"
-  export APP_VERSION_NAME="${version}-${APP_VERSION_CODE}-${RC_INDICATOR}"
+  export APP_VERSION_NAME="${version}-${APP_VERSION_CODE}${RC_INDICATOR}"
 fi
 
 export APP_RELEASE_NOTES=$BUILDKITE_MESSAGE
